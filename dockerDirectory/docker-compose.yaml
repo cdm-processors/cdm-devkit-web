@@ -1,0 +1,9 @@
+services:
+  coder1:
+    image: web_cdm
+    ports:
+      - 11190:8080
+  coder3:
+    image: new_coder
+    ports:
+      - 11199:8080
