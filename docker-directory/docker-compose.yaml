@@ -1,0 +1,5 @@
+services:
+  coder1:
+    image: web-cdm-devkit
+    ports:
+      - 11190:8080
