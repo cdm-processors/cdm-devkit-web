@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <title>Create Docker Container</title>
+</head>
+<body>
+<h1>Create Docker Container</h1>
+
+<form action="/create-container" method="post">
+    <button type="submit">Create Container</button>
+</form>
+
+<div th:if="${containerUrl}">
+    <p>Container started at: <span th:text="${containerUrl}"></span></p>
+</div>
+
+</body>
+</html>
