@@ -8,9 +8,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.cdm.web.backend.role.Role;
-import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Column;
-import org.springframework.data.relational.core.mapping.Table;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -20,10 +18,8 @@ import java.util.List;
 import java.util.Set;
 
 @Entity
-@Table(name = "t_user")
+@Table(name = "cdm_users")
 public class User implements UserDetails {
-    @jakarta.persistence.Id
-    @Getter
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
