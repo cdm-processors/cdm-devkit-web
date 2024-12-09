@@ -20,7 +20,7 @@ public class DockerController {
     }
 
     @PostMapping("/create-container")
-    public ModelAndView createContainer() {
+    public ModelAndView createContainer() throws InterruptedException {
         ContainerResponse response = dockerService.createContainer();
         ModelAndView modelAndView = new ModelAndView("index");
         modelAndView.addObject("containerUrl", response.getUrl());
