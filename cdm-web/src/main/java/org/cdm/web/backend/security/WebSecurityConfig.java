@@ -25,18 +25,20 @@ public class WebSecurityConfig {
 
     @Bean
     protected SecurityFilterChain configure(HttpSecurity httpSecurity) throws Exception {
-        httpSecurity
-                .authorizeRequests()
+        httpSecurity.csrf(AbstractHttpConfigurer::disable)
+                .cors(AbstractHttpConfigurer::disable)
+                .authorizeHttpRequests(authorizeHttpRequests -> authorizeHttpRequests
                 .requestMatchers("/registration").not().fullyAuthenticated()
-                .requestMatchers("/admin/**").hasRole("ADMIN")
+                //.requestMatchers("/admin/**").hasRole("ADMIN")
                 .requestMatchers("/create-container").hasRole("USER")
                 .requestMatchers("/", "/resources/**").permitAll()
                 .anyRequest().authenticated()
-                .and()
+                )
                 .formLogin(formLogin -> formLogin
                         .loginPage("/login")
-                        .defaultSuccessUrl("/", true)
                         .permitAll()
+                        .defaultSuccessUrl("/home", true)
+
                 )
                 .logout((logout) ->
                         logout.deleteCookies("remove")
