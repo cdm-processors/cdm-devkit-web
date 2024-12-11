@@ -1,4 +1,4 @@
-##### Guide for launching CdM-Web Spring application
+### Guide for launching CdM-Web Spring application
 
 
 
