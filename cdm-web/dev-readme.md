@@ -19,7 +19,7 @@ Steps:
    VALUES (1, 'ROLE_USER'), (2, 'ROLE_ADMIN');
    ```
    There can be a problem, that console doesn't see 't_roles' table; in this case you have to put a cursor on table name and IDEA suggests you to choose a schema: you need to choose `${POSTGRES_DB}` schema
-9. Try to send POST request on `http://localhost:8080/registration`. In postman, in the body of request you need to choose `x-www-form-undecoded`, and choose `username`, `password` and `passwordConfirm` as keys and write your values
+9. Try to send POST request on `http://localhost:8080/registration`. In postman, in the body of request you need to choose `x-www-form-urlencoded`, and choose `username`, `password` and `passwordConfirm` as keys and write your values
 10. Upon a successful completion, request should return `201 created`
 11. Then you can check in DB by double-clicking on `cdm_users` table
 12. Go on `http://localhost:8080/login`, and try to log in
