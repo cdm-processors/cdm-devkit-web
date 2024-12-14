@@ -26,9 +26,14 @@ import java.util.concurrent.TimeUnit;
 public class DockerService {
     private final DockerClient dockerClient;
     private int portCounter = 8081;
-    private final List<String> containerIds = new ArrayList<>();
+    private final ConcurrentHashMap<Integer, String> portContainerMap = new ConcurrentHashMap<>();
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
-    private final ConcurrentHashMap<String, Boolean> containerActivity = new ConcurrentHashMap<>();
+    private static final int START_PORT = 8081;
+    private static final int END_PORT = 8130;
+    private static final int MEMORY_LIMIT_MB = 512;
+    private static final int PIDS_LIMIT = 20;
+    private static final int CONTAINER_LIFETIME = 30;
+
 
     @Autowired
     public DockerService(DockerClient dockerClient) {
@@ -45,17 +50,21 @@ public class DockerService {
                 }
             }
         } catch (UnsupportedOperationException e) {
-            throw new RuntimeException("Ваше окружение не поддерживает Posix права доступа: " + volumePath, e);
+            throw new RuntimeException("Your environment does not support Posix permissions: " + volumePath, e);
         } catch (IOException e) {
-            throw new RuntimeException("Ошибка при создании директории: " + volumePath, e);
+            throw new RuntimeException("Error with creating directory: " + volumePath, e);
         }
     }
 
     public ContainerResponse createContainer(String username) throws InterruptedException {
         CreateContainerResponse container;
         dockerClient.pullImageCmd("nikolay251/cdm-web-coder1:tag").start().awaitCompletion();
-        int hostPort = portCounter++;
+        int hostPort = allocatePort();
+        if (hostPort == -1) {
+            throw new RuntimeException("No available ports for creating the container.");
+        }
         ExposedPort containerPort = ExposedPort.tcp(8080);
+        Ulimit[] ulimits = {new Ulimit("nproc", PIDS_LIMIT, PIDS_LIMIT + 10)};
         if (!System.getProperty("os.name").toLowerCase().contains("win")){
             String volumePath = "/data/" + username;
             ensureVolumePathExists(volumePath);
@@ -65,56 +74,64 @@ public class DockerService {
                     .withExposedPorts(containerPort)
                     .withPortBindings(new PortBinding(Ports.Binding.bindPort(hostPort), containerPort))
                     .withBinds(bind)
+                    .withMemory((long) (MEMORY_LIMIT_MB * 1024 * 1024))
                     .exec();
         } else {
             container = dockerClient.createContainerCmd("nikolay251/cdm-web-coder1:tag")
                     .withExposedPorts(containerPort)
                     .withPortBindings(new PortBinding(Ports.Binding.bindPort(hostPort), containerPort))
+                    .withMemory((long) (MEMORY_LIMIT_MB * 1024 * 1024))
                     .exec();
         }
         dockerClient.startContainerCmd(container.getId()).exec();
-        containerIds.add(container.getId());
+        portContainerMap.put(hostPort, container.getId());
         String containerUrl = "http://localhost:" + hostPort;
-        monitorContainerActivity(container.getId(), containerUrl);
+        monitorContainerActivity(container.getId(), hostPort);
         return new ContainerResponse(container.getId(), containerUrl);
     }
 
-    public void monitorContainerActivity(String containerId, String containerUrl) {
-        Runnable monitorTask = () -> {
-            if (!isContainerActive(containerUrl)) {
-                stopAndRemoveContainer(containerId);
-                containerActivity.remove(containerId);
-            } else {
-                containerActivity.put(containerId, true);
+    private int allocatePort() {
+        for (int port = START_PORT; port <= END_PORT; port++) {
+            if (!portContainerMap.containsKey(port)) {
+                return port;
             }
-        };
-        scheduler.scheduleAtFixedRate(monitorTask, 1, 1, TimeUnit.MINUTES);
+        }
+        return -1;
     }
 
-    private boolean isContainerActive(String containerUrl) {
+    public void monitorContainerActivity(String containerId, int hostPort) {
+        scheduler.schedule(() -> {
+            if (!isContainerActive(hostPort)) {
+                stopAndRemoveContainer(containerId, hostPort);
+            }
+        }, CONTAINER_LIFETIME, TimeUnit.MINUTES);
+    }
+
+    private boolean isContainerActive(int hostPort) {
+        String containerUrl = "http://localhost:" + hostPort;
         try {
             RestTemplate restTemplate = new RestTemplate();
-            restTemplate.getForEntity(containerUrl + "/api/activity", String.class);
+            restTemplate.getForEntity(containerUrl, String.class);
             return true;
         } catch (Exception e) {
             return false;
         }
     }
 
-    private void stopAndRemoveContainer(String containerId) {
+    private void stopAndRemoveContainer(String containerId, int hostPort) {
         try {
             dockerClient.stopContainerCmd(containerId).exec();
             dockerClient.removeContainerCmd(containerId).exec();
-            containerIds.remove(containerId);
+            portContainerMap.remove(hostPort);
         } catch (Exception e) {
-            System.err.println("Ошибка при удалении контейнера " + containerId + ": " + e.getMessage());
+            System.err.println("Error while deleting container " + containerId + ": " + e.getMessage());
         }
     }
 
     @PreDestroy
     public void cleanupAllContainers() {
-        for (String containerId : new ArrayList<>(containerIds)) {
-            stopAndRemoveContainer(containerId);
+        for (int port : portContainerMap.keySet()) {
+            stopAndRemoveContainer(portContainerMap.get(port), port);
         }
         scheduler.shutdown();
     }
