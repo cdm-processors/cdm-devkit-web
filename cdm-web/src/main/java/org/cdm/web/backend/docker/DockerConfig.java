@@ -15,9 +15,16 @@ public class DockerConfig {
 
     @Bean
     public DockerClient dockerClient() {
-        DefaultDockerClientConfig config = DefaultDockerClientConfig.createDefaultConfigBuilder()
-                .withDockerHost("tcp://localhost:2375")
-                .build();
+        DefaultDockerClientConfig config;
+        if (!System.getProperty("os.name").toLowerCase().contains("win")){
+            config = DefaultDockerClientConfig.createDefaultConfigBuilder()
+                    .withDockerHost("unix:///var/run/docker.sock")
+                    .build();
+        } else {
+            config = DefaultDockerClientConfig.createDefaultConfigBuilder()
+                    .withDockerHost("tcp://localhost:2375")
+                    .build();
+        }
 
         DockerHttpClient httpClient = new ApacheDockerHttpClient.Builder()
                 .dockerHost(config.getDockerHost())

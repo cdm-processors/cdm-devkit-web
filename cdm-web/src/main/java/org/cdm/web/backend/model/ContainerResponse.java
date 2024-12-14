@@ -1,5 +1,8 @@
 package org.cdm.web.backend.model;
 
+import lombok.Getter;
+
+@Getter
 public class ContainerResponse {
     private String id;
     private String url;
@@ -9,11 +12,4 @@ public class ContainerResponse {
         this.url = url;
     }
 
-    public String getId() {
-        return id;
-    }
-
-    public String getUrl() {
-        return url;
-    }
 }
