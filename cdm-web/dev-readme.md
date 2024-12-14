@@ -33,6 +33,11 @@ Steps:
 
 
 If you do not have a local version of the POSIX system, such as Ubuntu, volumes may become deprecated because the access rights for the directory on the container will be the same as the local `/data/{user}` directory on a Windows system. So they are converted to the POSIX standard mask `drwxr-xr-x` from the `root` user and you will not be able to create files in the container. This is because of the WSL standard mask for files. Therefore, you should have a local terminal similar to Ubuntu.
+On it you should have root privileges. In Windows PowerShell, you can use the following command:
+1. Command
+   ```
+   ubuntu config --default-user root
+   ```
 Otherwise, to resolve this issue, follow these steps:
 1. Open a terminal on your POSIX-based operating system and follow the instructions below to install JDK if you do not already have it. (you may need to change the command for the JDK (SDK) you use to run your API in Idea):
    ```
@@ -45,4 +50,5 @@ Otherwise, to resolve this issue, follow these steps:
 2. Then go to the `Configuration` section near the `Run` and `Debug` button and edit it.
 3. In `Run on` use `Manage targets` and add your POSIX OS as a target - for me, it was `WSL Ubuntu`
 4. If everything is correct, the Idea will automatically find your JDK. Otherwise, you should change the `JDK home path`, `JDK version` and `java` in the build and run in the Configuration.
-5. Run your application with `Run` button.
+5. In settings of docker-desktop mark `Use the WSL 2 based engine` and `Expose daemon on tcp://localhost:2375 without TLS`
+6. Run your application with `Run` button.
