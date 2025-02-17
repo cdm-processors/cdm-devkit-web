@@ -16,8 +16,32 @@
 
 <div th:if="${containerUrl}">
     <p>Container started at: <span th:text="${containerUrl}"></span></p>
-    <p>Container will be checked for activity every 30 minutes.</p>
+    <p>Container will be monitored via heartbeat.</p>
 </div>
+
+<div th:if="${containerId}">
+    <input type="hidden" id="containerId" th:value="${containerId}" />
+</div>
+
+<script>
+    const containerElem = document.getElementById("containerId");
+    if (containerElem) {
+        const containerId = containerElem.value;
+        const heartbeatInterval = 30000;
+        function sendHeartbeat() {
+            fetch('/api/heartbeat?containerId=' + containerId, {
+                method: 'POST'
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        console.error("Heartbeat failed, status: " + response.status);
+                    }
+                })
+                .catch(error => console.error("Heartbeat error:", error));
+        }
+        setInterval(sendHeartbeat, heartbeatInterval);
+    }
+</script>
 
 </body>
 </html>

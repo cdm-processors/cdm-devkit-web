@@ -15,8 +15,6 @@ import java.nio.file.Path;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.attribute.PosixFilePermissions;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -25,19 +23,20 @@ import java.util.concurrent.TimeUnit;
 @Service
 public class DockerService {
     private final DockerClient dockerClient;
-    private int portCounter = 8081;
     private final ConcurrentHashMap<Integer, String> portContainerMap = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, Long> heartbeatTimestamps = new ConcurrentHashMap<>();
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
     private static final int START_PORT = 8081;
     private static final int END_PORT = 8130;
     private static final int MEMORY_LIMIT_MB = 512;
     private static final int PIDS_LIMIT = 20;
-    private static final int CONTAINER_LIFETIME = 30;
+    private static final long HEARTBEAT_TIMEOUT_MILLIS = TimeUnit.MINUTES.toMillis(5);
 
 
     @Autowired
     public DockerService(DockerClient dockerClient) {
         this.dockerClient = dockerClient;
+        scheduler.scheduleAtFixedRate(this::checkHeartbeats, 1, 1, TimeUnit.MINUTES);
     }
 
     private void ensureVolumePathExists(String volumePath) {
@@ -64,7 +63,6 @@ public class DockerService {
             throw new RuntimeException("No available ports for creating the container.");
         }
         ExposedPort containerPort = ExposedPort.tcp(8080);
-        Ulimit[] ulimits = {new Ulimit("nproc", PIDS_LIMIT, PIDS_LIMIT + 10)};
         if (!System.getProperty("os.name").toLowerCase().contains("win")){
             String volumePath = "/data/" + username;
             ensureVolumePathExists(volumePath);
@@ -85,8 +83,8 @@ public class DockerService {
         }
         dockerClient.startContainerCmd(container.getId()).exec();
         portContainerMap.put(hostPort, container.getId());
+        heartbeatTimestamps.put(container.getId(), System.currentTimeMillis());
         String containerUrl = "http://localhost:" + hostPort;
-        monitorContainerActivity(container.getId(), hostPort);
         return new ContainerResponse(container.getId(), containerUrl);
     }
 
@@ -99,23 +97,31 @@ public class DockerService {
         return -1;
     }
 
-    public void monitorContainerActivity(String containerId, int hostPort) {
-        scheduler.schedule(() -> {
-            if (!isContainerActive(hostPort)) {
-                stopAndRemoveContainer(containerId, hostPort);
-            }
-        }, CONTAINER_LIFETIME, TimeUnit.MINUTES);
+    public void updateHeartbeat(String containerId) {
+        heartbeatTimestamps.put(containerId, System.currentTimeMillis());
     }
 
-    private boolean isContainerActive(int hostPort) {
-        String containerUrl = "http://localhost:" + hostPort;
-        try {
-            RestTemplate restTemplate = new RestTemplate();
-            restTemplate.getForEntity(containerUrl, String.class);
-            return true;
-        } catch (Exception e) {
-            return false;
+    private void checkHeartbeats() {
+        long now = System.currentTimeMillis();
+        for (String containerId : heartbeatTimestamps.keySet()) {
+            if (now - heartbeatTimestamps.get(containerId) > HEARTBEAT_TIMEOUT_MILLIS) {
+                int port = getPortByContainerId(containerId);
+                if (port != -1) {
+                    System.out.println("No heartbeat from container " + containerId + ". Stopping container...");
+                    stopAndRemoveContainer(containerId, port);
+                }
+                heartbeatTimestamps.remove(containerId);
+            }
         }
+    }
+
+    private int getPortByContainerId(String containerId) {
+        for (Integer port : portContainerMap.keySet()) {
+            if (portContainerMap.get(port).equals(containerId)) {
+                return port;
+            }
+        }
+        return -1;
     }
 
     private void stopAndRemoveContainer(String containerId, int hostPort) {
@@ -123,6 +129,7 @@ public class DockerService {
             dockerClient.stopContainerCmd(containerId).exec();
             dockerClient.removeContainerCmd(containerId).exec();
             portContainerMap.remove(hostPort);
+            heartbeatTimestamps.remove(containerId);
         } catch (Exception e) {
             System.err.println("Error while deleting container " + containerId + ": " + e.getMessage());
         }

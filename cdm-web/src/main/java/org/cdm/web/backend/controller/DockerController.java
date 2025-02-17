@@ -34,6 +34,7 @@ public class DockerController {
         ContainerResponse response = dockerService.createContainer(username);
         ModelAndView modelAndView = new ModelAndView("index");
         modelAndView.addObject("containerUrl", response.getUrl());
+        modelAndView.addObject("containerId", response.getId());
         return modelAndView;
     }
 }
