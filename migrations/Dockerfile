@@ -1,7 +1,7 @@
-FROM postgres:latest
+FROM golang:latest
+
+RUN go install  github.com/pressly/goose/v3/cmd/goose@latest
 
 COPY ./* /migrations/
 
-RUN chmod +x /migrations/migration-script.sh
-
-CMD [ "bash", "-c", "/migrations/migration-script.sh" ]
+WORKDIR /migrations
