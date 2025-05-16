@@ -16,7 +16,11 @@
 
 <div th:if="${containerUrl}">
     <p>Container started at: <span th:text="${containerUrl}"></span></p>
-    <p>Container will be checked for activity every 30 minutes.</p>
+    <p>Container will be monitored via heartbeat.</p>
+</div>
+
+<div th:if="${containerId}">
+    <input type="hidden" id="containerId" th:value="${containerId}" />
 </div>
 
 </body>
