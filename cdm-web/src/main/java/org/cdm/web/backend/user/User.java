@@ -8,7 +8,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.cdm.web.backend.role.Role;
-import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -17,6 +16,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
+@Getter
+@Setter
 @Entity
 @Table(name = "cdm_users")
 public class User implements UserDetails {
@@ -31,8 +32,16 @@ public class User implements UserDetails {
     private String passwordConfirm;
     @ManyToMany(fetch = FetchType.EAGER)
     private Set<Role> roles;
-
+    @Column
+    boolean enabled;
     public User() {
+        this.enabled = false;
+    }
+
+    public User(String username, String password) {
+        this.enabled = false;
+        this.username = username;
+        this.password = password;
     }
 
     public void setId(Long id) {

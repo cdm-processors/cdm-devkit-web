@@ -1,22 +1,28 @@
 package org.cdm.web.backend.controller;
 
 import org.cdm.web.backend.docker.DockerService;
+import org.cdm.web.backend.email.EmailService;
+import org.cdm.web.backend.email.EmailServiceImpl;
+import org.cdm.web.backend.email.OnRegistrationCompleteEvent;
 import org.cdm.web.backend.model.ContainerResponse;
 import org.cdm.web.backend.user.User;
 import org.cdm.web.backend.role.Role;
 
 import org.cdm.web.backend.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.authentication.event.AuthenticationSuccessEvent;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Collections;
+import java.util.Locale;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -33,7 +39,10 @@ public class AuthController {
 
     @Autowired
     private BCryptPasswordEncoder passwordEncoder;
-
+    @Autowired
+    private EmailService emailService = new EmailServiceImpl();
+    @Autowired
+    private ApplicationEventPublisher eventPublisher;
     @GetMapping("/login")
     public ResponseEntity<User> getLoginForm() {
         // Возвращаем пустой объект User для заполнения на фронтенде
@@ -74,7 +83,6 @@ public class AuthController {
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken(existingUser .getUsername(), null, existingUser .getAuthorities())
         );
-
         return ResponseEntity.ok("Login successful");
     }
 
@@ -102,6 +110,7 @@ public class AuthController {
 
         // Save the user to the database
         userService.saveUser (user);
+        emailService.sendSimpleMessage(user.getUsername(), "CdM Devkit Web", "You've been registered");
         return ResponseEntity.status(201).body("User  registered successfully");
     }
 

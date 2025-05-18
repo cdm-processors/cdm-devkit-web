@@ -4,6 +4,8 @@
   <title>Please Log In</title>
 </head>
 <body>
+<div th:if="${param.error != null}"
+     th:text="${session[SPRING_SECURITY_LAST_EXCEPTION]}">error</div>
 <h1>Please Log In</h1>
 <div th:if="${param.error}">
   Invalid username and password.</div>

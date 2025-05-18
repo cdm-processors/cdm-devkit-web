@@ -2,6 +2,8 @@ package org.cdm.web.backend.user;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import org.cdm.web.backend.email.EmailService;
+import org.cdm.web.backend.email.EmailServiceImpl;
 import org.cdm.web.backend.role.Role;
 import org.cdm.web.backend.role.RoleRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +16,8 @@ import org.springframework.stereotype.Service;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import org.cdm.web.backend.email.VerificationToken;
+import org.cdm.web.backend.email.VerificationTokenRepository;
 
 @Service
 public class UserService implements UserDetailsService {
@@ -25,6 +29,13 @@ public class UserService implements UserDetailsService {
     RoleRepository roleRepository;
     @Autowired
     BCryptPasswordEncoder bCryptPasswordEncoder;
+    @Autowired
+    EmailService emailService = new EmailServiceImpl();
+    @Autowired
+    private EmailServiceImpl emailServiceImpl;
+
+    @Autowired
+    private VerificationTokenRepository tokenRepository;
 
     @Autowired
     void setbCryptPasswordEncoder(BCryptPasswordEncoder bCryptPasswordEncoder) {
@@ -46,6 +57,7 @@ public class UserService implements UserDetailsService {
         return userFromDb.orElse(new User());
     }
 
+
     public List<User> allUsers() {
         return userRepository.findAll();
     }
@@ -58,12 +70,13 @@ public class UserService implements UserDetailsService {
         }
 
         user.setRoles(Collections.singleton(new Role(1L, "ROLE_USER")));
-        user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
+        //user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
         userRepository.save(user);
         return true;
     }
 
     public boolean deleteUser(Long userId) {
+
         if (userRepository.findById(userId).isPresent()) {
             userRepository.deleteById(userId);
             return true;
@@ -71,11 +84,22 @@ public class UserService implements UserDetailsService {
         return false;
     }
 
+
+
     public List<User> usergtList(Long idMin) {
         return em.createQuery("SELECT u FROM User u WHERE u.id > :paramId", User.class)
                 .setParameter("paramId", idMin).getResultList();
     }
     public User findByUsername(String username) {
         return userRepository.findByUsername(username);
+    }
+
+    public void createVerificationToken(User user, String token) {
+        VerificationToken myToken = new VerificationToken(token, user);
+        tokenRepository.save(myToken);
+    }
+
+    public VerificationToken getVerificationToken(String VerificationToken) {
+        return tokenRepository.findByToken(VerificationToken);
     }
 }

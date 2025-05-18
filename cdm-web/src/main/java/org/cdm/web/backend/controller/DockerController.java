@@ -3,38 +3,41 @@ package org.cdm.web.backend.controller;
 import org.cdm.web.backend.docker.DockerService;
 import org.cdm.web.backend.model.ContainerResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
-@Controller
+@RestController
 public class DockerController {
 
     @Autowired
     private DockerService dockerService;
 
     @GetMapping("/home")
-    public String showHomePage(Model model) {
+    public ResponseEntity<String> showHomePage() {
         Authentication authentication =
                 SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
-        model.addAttribute("username", username);
-        return "index";
+        return ResponseEntity.ok(username);
     }
 
     @PostMapping("/create-container")
-    public ModelAndView createContainer(String username) throws InterruptedException {
-        if (username == null || username.isEmpty()) {
-            throw new IllegalArgumentException("Username is required");
+    public ResponseEntity<?> createContainer(@RequestParam String username) {
+        try {
+            if (username == null || username.isEmpty()) {
+                return ResponseEntity.badRequest().body("Username is required");
+            }
+            ContainerResponse response = dockerService.createContainer(username);
+            return ResponseEntity.ok(response.getUrl());
+        } catch (Exception e) {
+            return ResponseEntity.status(500)
+                    .body("Error creating container: " + e.getMessage());
         }
-        ContainerResponse response = dockerService.createContainer(username);
-        ModelAndView modelAndView = new ModelAndView("index");
-        modelAndView.addObject("containerUrl", response.getUrl());
-        modelAndView.addObject("containerId", response.getId());
-        return modelAndView;
     }
 }

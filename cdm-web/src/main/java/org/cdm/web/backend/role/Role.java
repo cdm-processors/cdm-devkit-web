@@ -17,6 +17,7 @@ import java.util.Set;
 public class Role implements GrantedAuthority {
     @Id
     private Long id;
+    @Getter
     private String name;
     @Transient
     @ManyToMany(mappedBy = "roles")
@@ -43,6 +44,10 @@ public class Role implements GrantedAuthority {
 
     public void setUsers(Set<User> users) {
         this.users = users;
+    }
+
+    public String getName() {
+        return name;
     }
 
     @Override

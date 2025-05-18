@@ -30,7 +30,7 @@ public class DockerService {
     private static final int END_PORT = 8130;
     private static final int MEMORY_LIMIT_MB = 512;
     private static final int PIDS_LIMIT = 20;
-    private static final long HEARTBEAT_TIMEOUT_MILLIS = TimeUnit.MINUTES.toMillis(5);
+    private static final long HEARTBEAT_TIMEOUT_MILLIS = TimeUnit.MINUTES.toMillis(60);
 
 
     @Autowired
