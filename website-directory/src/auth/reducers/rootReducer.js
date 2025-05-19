@@ -1,7 +1,5 @@
-import { combineReducers } from "redux";
-
-//session
-import  sessionReducer  from "./sessionReducer"; // Импортируйте ваш редьюсер
+import { combineReducers } from 'redux';
+import { sessionReducer } from './sessionReducer';
 
 const rootReducer = combineReducers({
     session: sessionReducer

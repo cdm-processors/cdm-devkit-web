@@ -1,8 +1,6 @@
-// auth/reducers/sessionReducer.js
-
 const initialState = {
-    isAuthenticated: false,
     user: null,
+    isAuthenticated: false
 };
 
 const sessionReducer = (state = initialState, action) => {
@@ -11,13 +9,11 @@ const sessionReducer = (state = initialState, action) => {
             return {
                 ...state,
                 isAuthenticated: true,
-                user: action.payload, // Сохраните информацию о пользователе
+                user: action.payload
             };
-        case 'LOGOUT':
-            return initialState; // Сброс состояния при выходе
         default:
             return state;
     }
 };
 
-export default sessionReducer;
+export { sessionReducer };

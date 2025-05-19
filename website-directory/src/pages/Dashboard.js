@@ -1,86 +1,181 @@
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom'; // Import useNavigate
-import { StyledTitle, StyledSubTitle, Avatar, StyledButton, ButtonGroup, StyledFormArea, colors } from "../components/Style";
+import { useState, useEffect } from "react";
+import {
+  StyledTitle,
+  StyledSubTitle,
+  Avatar,
+  StyledButton,
+  ButtonGroup,
+  StyledFormArea,
+  colors,
+  ExtraText,
+} from "./../components/Style";
+
+// Logo
 import Logo from "./../assets/logo.png";
-import axios from 'axios';
-import { useSelector } from 'react-redux'; // Импортируйте useSelector
 
-const Dashboard = () => {
-    const [containerUrl, setContainerUrl] = useState("");
-    const isAuthenticated = useSelector(state => state.session.isAuthenticated); // Получите состояние аутентификации
-    const navigate = useNavigate(); // Initialize useNavigate here
+// Auth & Redux
+import { connect } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { FiMail, FiLock } from "react-icons/fi";
+import { ThreeDots } from "react-loader-spinner";
+import { createContainer } from "../auth/actions/userActions";
 
-    const fetchContainerUrl = async () => {
-        try {
-            const loginResponse = await axios.post('http://localhost:8080/login', {
-                username: "k@g.nsu.ru",
-                password: "12121212",
-            }, { withCredentials: true }); // Ensure cookies are sent
-    
-            console.log('Login Response:', loginResponse.data); // Log the login response
-    
-            // Now, create the container using the authenticated user's username
-            const homeResponse = await axios.get('http://localhost:8080/api/auth/home', { withCredentials: true });
-            
-            if (homeResponse.status === 200) {
-                console.log('Home Response:', homeResponse.data); // Log the response from /home
-    
-                // Create the container
-                const response = await axios.post('http://localhost:8080/api/auth/create-container', {}, {
-                    withCredentials: true // Ensure cookies are sent
-                });
-                console.log('Create Container Response:', response.data); // Log the response from creating the container
-                setContainerUrl(response.data); // Set the container URL
-            }
-        } catch (error) {
-            console.error("Error fetching container URL:", error);
-        }
+const Dashboard = ({ user, isAuthenticated, createContainer }) => {
+  const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    console.log('Current user state:', user);
+}, [user]);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate("/login");
+    }
+    setIsLoading(false);
+  }, [isAuthenticated, navigate]);
+
+  const handleLogout = () => {
+    navigate("/");
+  };
+
+  const handleCreateContainer = () => {
+    const containerData = {
+        email: user.username,
+        password: localStorage.getItem('userPassword')
     };
+    
+    createContainer(containerData, navigate, (error) => {
+        console.error('Container creation failed:', error);
+    });
+  };
 
-    const handleDisabledButtonClick = () => {
-        navigate('/login');
-    };
-
-    return (
-        <div>
-            <div style={{
-                position: "absolute",
-                top: 0,
-                left: 0,
-                backgroundColor: "transparent",
-                width: "100%",
-                padding: "15px",
-                display: "flex",
-                justifyContent: "flex-start"
-            }}>
-                <Avatar image={Logo} />
-            </div>
-            <StyledFormArea bg={colors.dark2}>
-                <StyledTitle size={65}>
-                    Вы успешно вошли в наше приложение
-                </StyledTitle>
-                <StyledSubTitle size={27}>
-                    Вы можете перейти в контейнер
-                </StyledSubTitle>
-                <ButtonGroup>
-                    {isAuthenticated ? ( // Проверяем, аутентифицирован ли пользователь
-                        <StyledButton onClick={fetchContainerUrl}>
-                            Создать контейнер
-                        </StyledButton>
-                    ) : (
-                        <StyledButton to={"/login"} disabled>
-                            Пожалуйста, войдите, чтобы создать контейнер
-                        </StyledButton>
-                    )}
-                    {containerUrl && (
-                        <StyledButton to={containerUrl} target="_blank">
-                            Перейти в контейнер
-                        </StyledButton>
-                    )}
-                </ButtonGroup>
-            </StyledFormArea>
+  return (
+    <div
+      style={{
+        display: 'flex',
+        height: '100vh',
+        width: '100%',
+      }}
+    >
+      {/* Left Side: Content Section */}
+      <div
+        style={{
+          flex: 1,
+          backgroundColor: '#fff',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          alignItems: 'center', 
+          padding: '50px',
+          position: 'relative',
+        }}
+      >
+        {/* Logo in the top-left corner */}
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            padding: "15px",
+            display: "flex",
+            justifyContent: "flex-start",
+          }}
+        >
+          <Avatar image={Logo} />
         </div>
-    );
-}
 
-export default Dashboard;
+        {/* Main Content */}
+        {isLoading ? (
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              height: "100vh",
+            }}
+          >
+            <ThreeDots color={colors.theme} height={49} width={100} />
+          </div>
+        ) : (
+          <StyledFormArea style={{ width: '100%', maxWidth: '400px', backgroundColor: '#fff' }}>
+            <StyledTitle size={40} color={colors.primary}>
+              CDM Devkit Web
+            </StyledTitle>
+            <StyledSubTitle size={20} color={colors.dark2} style={{ marginBottom: '30px' }}>
+              Welcome to the web application of CDM Devkit
+            </StyledSubTitle>
+            <StyledSubTitle size={27} color={colors.dark2}>
+              Dashboard
+            </StyledSubTitle>
+            <StyledSubTitle size={20} color={colors.dark2} style={{ marginBottom: '20px' }}>
+              Welcome to your dashboard
+            </StyledSubTitle>
+
+            {user && (
+              <div style={{ marginBottom: '20px' }}>
+                <ExtraText color={colors.dark2}>Your Details:</ExtraText>
+                <ExtraText color={colors.dark2}>
+                  <FiMail /> Email: {user.username}
+                </ExtraText>
+                <ExtraText color={colors.dark2}>
+                  <FiLock /> Status: {isAuthenticated ? "Authenticated" : "Not Authenticated"}
+                </ExtraText>
+              </div>
+            )}
+
+            <ButtonGroup>
+              <StyledButton
+                to="#"
+                onClick={handleCreateContainer}
+                style={{
+                  backgroundColor: '#4CAF50', 
+                  color: '#fff',
+                  borderRadius: '25px',
+                  padding: '10px 30px',
+                  marginRight: '10px'
+                }}
+              >
+                Create Container
+              </StyledButton>
+              <StyledButton
+                to="#"
+                onClick={handleLogout}
+                style={{
+                  backgroundColor: '#000',
+                  color: '#fff',
+                  borderRadius: '25px',
+                  padding: '10px 30px',
+                }}
+              >
+                Logout
+              </StyledButton>
+            </ButtonGroup>
+          </StyledFormArea>
+        )}
+      </div>
+
+      {/* Right Side: Background Section */}
+      <div
+                style={{
+                    flex: 1,
+                    backgroundImage: `url(${require('./../assets/newback2.jpg')})`,
+                    backgroundSize: 'cover', 
+                    backgroundRepeat: 'no-repeat',
+                    backgroundPosition: 'center',
+                }}
+            />
+    </div>
+  );
+};
+
+const mapStateToProps = ({ session }) => ({
+  user: session.user,
+  isAuthenticated: session.isAuthenticated,
+});
+
+const mapDispatchToProps = {
+  createContainer
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(Dashboard);

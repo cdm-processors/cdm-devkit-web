@@ -6,6 +6,8 @@
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
+    "antd": "^5.24.2",
+    "axios": "^1.8.1",
     "corns": "^0.0.0",
     "formik": "^2.4.6",
     "react": "^18.3.1",

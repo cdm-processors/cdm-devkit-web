@@ -7,61 +7,123 @@ import * as Yup from 'yup';
 import { FiMail, FiLock } from 'react-icons/fi';
 import { ThreeDots } from 'react-loader-spinner';
 import { connect } from 'react-redux';
-import { loginUser  } from '../auth/actions/userActions';
+import { loginUser } from '../auth/actions/userActions';
 import { useNavigate } from 'react-router-dom';
 
-const Login = ({ loginUser  }) => {
+const Login = ({ loginUser }) => {
     const navigate = useNavigate();
     return (
-       <div>
-            <StyledFormArea>
-                <Avatar image={Logo} />
-                <StyledSubTitle color={colors.theme} size={30}>Member Login</StyledSubTitle>
-                <Formik
-                    initialValues={{ email: '', password: '' }} 
-                    validationSchema={Yup.object({
-                        email: Yup.string().email("Invalid email address").required("Required"),
-                        password: Yup.string().min(8, "Password is too short").max(30, "Password is too long").required("Required"),
-                    })}
-                    onSubmit={(values, { setSubmitting, setFieldError }) => {
-                        loginUser (values, navigate, setFieldError, setSubmitting);
+        <div
+            style={{
+                display: 'flex',
+                height: '100vh',
+                width: '100%',
+            }}
+        >
+            {/* Left Side: Form Section */}
+            <div
+                style={{
+                    flex: 1,
+                    backgroundColor: '#fff',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center',
+                    alignItems: 'center', 
+                    padding: '50px',
+                    position: 'relative',
+                }}
+            >
+                {/* Logo in the top-left corner */}
+                <div
+                    style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        padding: '15px',
+                        display: 'flex',
+                        justifyContent: 'flex-start',
                     }}
                 >
-                    {({ isSubmitting }) => (
-                        <Form>
-                            <TextInput 
-                                name="email"
-                                type="text"
-                                label="Email Address"
-                                placeholder="jaja@g.nsu.ru"
-                                icon={<FiMail />}
-                            />
-                            <TextInput 
-                                name="password"
-                                type="password"
-                                label="Password"
-                                placeholder="**********"
-                                icon={<FiLock />}
-                            />
-                            <ButtonGroup>
-                                {!isSubmitting && (<StyledFormButton type="submit">Login</StyledFormButton>)}
-                                {isSubmitting && (
-                                    <ThreeDots 
-                                        color={colors.theme}
-                                        height={49}
-                                        width={100}
-                                    />
-                                )}
-                            </ButtonGroup>
-                        </Form>
-                    )}
-                </Formik>
-                <ExtraText>
-                    New here? <TextLink to="/signup">Sign up</TextLink>
-                </ExtraText>
-            </StyledFormArea>
-       </div>
-    );
-}
+                    <Avatar image={Logo} />
+                </div>
 
-export default connect(null, { loginUser  })(Login);
+                {/* Form Area */}
+                <StyledFormArea style={{ width: '100%', maxWidth: '400px' }}>
+                    <StyledSubTitle color={colors.theme} size={40}>
+                        CDM Devkit Web
+                    </StyledSubTitle>
+                    <StyledSubTitle color={colors.dark2} size={20} style={{ marginBottom: '30px' }}>
+                        Welcome to the web application of CDM Devkit
+                    </StyledSubTitle>
+                    <Formik
+                        initialValues={{ email: '', password: '' }}
+                        validationSchema={Yup.object({
+                            email: Yup.string().email('Invalid email address').required('Required'),
+                            password: Yup.string().min(8, 'Password is too short').max(30, 'Password is too long').required('Required'),
+                        })}
+                        onSubmit={(values, { setSubmitting, setFieldError }) => {
+                            loginUser(values, navigate, setFieldError, setSubmitting);
+                        }}
+                    >
+                        {({ isSubmitting }) => (
+                            <Form>
+                                <TextInput
+                                    name="email"
+                                    type="text"
+                                    label="Email"
+                                    placeholder="jaja@g.nsu.ru"
+                                    icon={<FiMail />}
+                                />
+                                <TextInput
+                                    name="password"
+                                    type="password"
+                                    label="Password"
+                                    placeholder="**********"
+                                    icon={<FiLock />}
+                                />
+                                <ButtonGroup>
+                                    {!isSubmitting && (
+                                        <StyledFormButton
+                                            type="submit"
+                                            style={{
+                                                backgroundColor: '#000',
+                                                color: '#fff',
+                                                borderRadius: '25px',
+                                                padding: '10px 30px',
+                                            }}
+                                        >
+                                            Login
+                                        </StyledFormButton>
+                                    )}
+                                    {isSubmitting && (
+                                        <ThreeDots
+                                            color={colors.theme}
+                                            height={49}
+                                            width={100}
+                                        />
+                                    )}
+                                </ButtonGroup>
+                            </Form>
+                        )}
+                    </Formik>
+                    <ExtraText>
+                        New here? <TextLink to="/signup">Sign up</TextLink>
+                    </ExtraText>
+                </StyledFormArea>
+            </div>
+
+            {/* Right Side: Background Section */}
+            <div
+                style={{
+                    flex: 1,
+                    backgroundImage: `url(${require('./../assets/newback2.jpg')})`,
+                    backgroundSize: 'cover', 
+                    backgroundRepeat: 'no-repeat',
+                    backgroundPosition: 'center',
+                }}
+            />
+        </div>
+    );
+};
+
+export default connect(null, { loginUser })(Login);
