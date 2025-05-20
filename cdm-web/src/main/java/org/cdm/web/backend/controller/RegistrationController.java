@@ -61,6 +61,7 @@ public class RegistrationController {
             return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body("Validation errors");
+
         }
 
         if (!userForm.getPassword().equals(userForm.getPasswordConfirm())) {
@@ -108,3 +109,4 @@ public class RegistrationController {
         return "redirect:/login.html";
     }
 }
+
