@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <title>Create Docker Container</title>
+</head>
+<body>
+<div>
+    Logged in as: <span th:text="${#authentication.name}"></span>
+</div>
+<h1>Create Docker Container</h1>
+
+<form th:action="@{/create-container}" method="post">
+    <input type="hidden" name="username" th:value="${#authentication.name}" />
+    <button type="submit">Create Container</button>
+</form>
+
+<div th:if="${containerUrl}">
+    <p>Container started at: <span th:text="${containerUrl}"></span></p>
+    <p>Container will be monitored via heartbeat.</p>
+</div>
+
+<div th:if="${containerId}">
+    <input type="hidden" id="containerId" th:value="${containerId}" />
+</div>
+
+</body>
+</html>
