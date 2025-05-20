@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import org.cdm.web.backend.email.OnRegistrationCompleteEvent;
 import org.cdm.web.backend.email.VerificationToken;
 import org.cdm.web.backend.user.User;
+import org.cdm.web.backend.user.UserRepository;
 import org.cdm.web.backend.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
@@ -11,6 +12,7 @@ import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContext;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -32,6 +34,9 @@ public class RegistrationController {
     @Autowired
     private ApplicationEventPublisher eventPublisher;
 
+    @Autowired
+    private UserRepository userRepository;
+
     @GetMapping("/registration")
     public String registration(Model model) {
         model.addAttribute("userForm", new User());
@@ -41,28 +46,38 @@ public class RegistrationController {
 
 
     @PostMapping("/registration")
-    @ResponseStatus(HttpStatus.CREATED)
-    public String addUser(@ModelAttribute("userForm") @Valid User userForm, BindingResult bindingResult, Model model) {
+    public ResponseEntity<?> addUser(@ModelAttribute("userForm") @Valid User userForm,
+                                   BindingResult bindingResult,
+                                   Model model) {
+        User userFromDB = userRepository.findByUsername(userForm.getUsername());
 
+        if (userFromDB != null) {
+            return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body("User with email " + userForm.getUsername() + " already exists");
+        }
 
         if (bindingResult.hasErrors()) {
-            return "registration";
-        }
-        if (!userForm.getPassword().equals(userForm.getPasswordConfirm())){
-            model.addAttribute("passwordError", "Пароли не совпадают");
-            return "registration";
+            return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body("Validation errors");
         }
 
-        eventPublisher.publishEvent(new OnRegistrationCompleteEvent(userForm, LocaleContextHolder.getLocale(), "http://localhost:8080/"));
-        /*
-        if (!userService.saveUser(userForm)){
-            model.addAttribute("usernameError", "Пользователь с таким именем уже существует");
-            return "registration";
+        if (!userForm.getPassword().equals(userForm.getPasswordConfirm())) {
+            return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body("Passwords do not match");
         }
 
-         */
+        eventPublisher.publishEvent(new OnRegistrationCompleteEvent(
+            userForm,
+            LocaleContextHolder.getLocale(),
+            "http://localhost:8080/"
+        ));
 
-        return "redirect:/login";
+        return ResponseEntity
+            .status(HttpStatus.CREATED)
+            .body("User registered successfully");
     }
 
 
