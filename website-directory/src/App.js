@@ -3,11 +3,10 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Dashboard from "./pages/Dashboard";
 import { StyledContainer } from "./components/Style";
+import { Routes, Route, Navigate } from 'react-router-dom';
 
 import {
   BrowserRouter as Router,
-  Routes, 
-  Route
 } from 'react-router-dom';
 
 function App() {
@@ -19,6 +18,10 @@ function App() {
           <Route path="/login" element={<Login />} /> {}
           <Route path="/dashboard" element={<Dashboard />} /> {}
           <Route path="/" element={<Home />} /> {}
+          <Route 
+                path="/registrationConfirm" 
+                element={<Navigate to="/login" />} 
+            />
         </Routes>
       </StyledContainer>
     </Router>

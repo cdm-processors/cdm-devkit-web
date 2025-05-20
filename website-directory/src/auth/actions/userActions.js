@@ -5,22 +5,31 @@ axios.defaults.withCredentials = true;
 export const loginUser = (credentials, navigate, setError) => {
     return async (dispatch) => {
         try {
-            const response = await axios.post('http://localhost:8080/login', {
-                username: credentials.email,
-                password: credentials.password,
-            });
+            const formData = new URLSearchParams();
+            formData.append('username', credentials.email);
+            formData.append('password', credentials.password);
 
-            localStorage.setItem('userPassword', credentials.password);
-
-            dispatch({ 
-                type: 'LOGIN_SUCCESS', 
-                payload: {
-                    username: credentials.email,
-                    ...response.data
+            const response = await axios.post('http://localhost:8080/login', formData, {
+                withCredentials: true,
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
                 }
             });
-            navigate('/dashboard');
+
+            if (response.status === 200) {
+                localStorage.setItem('userPassword', credentials.password);
+                
+                dispatch({ 
+                    type: 'LOGIN_SUCCESS', 
+                    payload: {
+                        username: credentials.email,
+                        ...response.data
+                    }
+                });
+                navigate('/dashboard');
+            }
         } catch (error) {
+            console.error('Login error:', error.response?.data || error);
             setError(error.response?.data || 'Invalid email or password');
         }
     };
@@ -29,16 +38,37 @@ export const loginUser = (credentials, navigate, setError) => {
 export const signupUser = (credentials, navigate, setError) => {
     return async (dispatch) => {
         try {
-            const response = await axios.post('http://localhost:8080/registration', {
-                username: credentials.email,
-                password: credentials.password,
-                passwordConfirm: credentials.passwordConfirm,
+            const formData = new URLSearchParams();
+            formData.append('username', credentials.email);
+            formData.append('password', credentials.password);
+            formData.append('passwordConfirm', credentials.passwordConfirm);
+
+            const response = await axios.post('http://localhost:8080/registration', formData, {
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                }
             });
 
-            dispatch({ type: 'LOGIN_SUCCESS', payload: response.data });
-            navigate('/dashboard');
+            if (response.status === 201) {
+                dispatch({ 
+                    type: 'REGISTRATION_SUCCESS', 
+                    payload: {
+                        message: 'Registration successful! Please check your email to verify your account.'
+                    }
+                });
+                navigate('/login');
+            }
         } catch (error) {
-            setError(error.response?.data || 'Registration failed');
+            if (error.response?.status === 400) {
+                const errorMessage = error.response.data || 'User with this email already exists';
+                setError(errorMessage);
+                navigate('/');
+                return;
+            }
+            
+            const errorMessage = error.response?.data || 'Registration failed';
+            setError(errorMessage);
+            console.error('Registration error:', error.response?.data || error);
         }
     };
 };

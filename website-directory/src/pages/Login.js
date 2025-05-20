@@ -10,7 +10,7 @@ import { connect } from 'react-redux';
 import { loginUser } from '../auth/actions/userActions';
 import { useNavigate } from 'react-router-dom';
 
-const Login = ({ loginUser }) => {
+const Login = ({ loginUser, registrationMessage }) => {
     const navigate = useNavigate();
     return (
         <div
@@ -55,6 +55,17 @@ const Login = ({ loginUser }) => {
                     <StyledSubTitle color={colors.dark2} size={20} style={{ marginBottom: '30px' }}>
                         Welcome to the web application of CDM Devkit
                     </StyledSubTitle>
+                    {registrationMessage && (
+                        <div style={{
+                            padding: '10px',
+                            margin: '10px 0',
+                            backgroundColor: '#4CAF50',
+                            color: 'white',
+                            borderRadius: '4px'
+                        }}>
+                            {registrationMessage}
+                        </div>
+                    )}
                     <Formik
                         initialValues={{ email: '', password: '' }}
                         validationSchema={Yup.object({
@@ -126,4 +137,8 @@ const Login = ({ loginUser }) => {
     );
 };
 
-export default connect(null, { loginUser })(Login);
+const mapStateToProps = (state) => ({
+    registrationMessage: state.session.registrationMessage
+});
+
+export default connect(mapStateToProps, { loginUser })(Login);

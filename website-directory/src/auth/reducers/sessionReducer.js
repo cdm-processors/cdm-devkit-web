@@ -3,7 +3,7 @@ const initialState = {
     isAuthenticated: false
 };
 
-const sessionReducer = (state = initialState, action) => {
+export const sessionReducer = (state = initialState, action) => {
     switch (action.type) {
         case 'LOGIN_SUCCESS':
             return {
@@ -11,9 +11,12 @@ const sessionReducer = (state = initialState, action) => {
                 isAuthenticated: true,
                 user: action.payload
             };
+        case 'REGISTRATION_SUCCESS':
+            return {
+                ...state,
+                registrationMessage: action.payload.message
+            };
         default:
             return state;
     }
 };
-
-export { sessionReducer };
