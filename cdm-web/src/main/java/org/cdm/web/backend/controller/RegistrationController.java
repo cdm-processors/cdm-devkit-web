@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import org.cdm.web.backend.email.OnRegistrationCompleteEvent;
 import org.cdm.web.backend.email.VerificationToken;
 import org.cdm.web.backend.user.User;
+import org.cdm.web.backend.user.UserRepository;
 import org.cdm.web.backend.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
@@ -32,6 +33,9 @@ public class RegistrationController {
     @Autowired
     private ApplicationEventPublisher eventPublisher;
 
+    @Autowired
+    private UserRepository userRepository;
+
     @GetMapping("/registration")
     public String registration(Model model) {
         model.addAttribute("userForm", new User());
@@ -44,13 +48,18 @@ public class RegistrationController {
     @ResponseStatus(HttpStatus.CREATED)
     public String addUser(@ModelAttribute("userForm") @Valid User userForm, BindingResult bindingResult, Model model) {
 
+        User userFromDB = userRepository.findByUsername(userForm.getUsername());
+
+        if (userFromDB != null) {
+            throw new RegException();
+        }
 
         if (bindingResult.hasErrors()) {
-            return "registration";
+            throw new RegException();
         }
         if (!userForm.getPassword().equals(userForm.getPasswordConfirm())){
             model.addAttribute("passwordError", "Пароли не совпадают");
-            return "registration";
+            throw new RegException();
         }
 
         eventPublisher.publishEvent(new OnRegistrationCompleteEvent(userForm, LocaleContextHolder.getLocale(), "http://localhost:8080/"));
@@ -92,4 +101,7 @@ public class RegistrationController {
         userService.saveUser(user);
         return "redirect:/login.html";
     }
+
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    private class RegException extends RuntimeException {}
 }
