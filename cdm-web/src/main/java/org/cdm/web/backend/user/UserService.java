@@ -2,6 +2,8 @@ package org.cdm.web.backend.user;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import lombok.Getter;
+import lombok.Setter;
 import org.cdm.web.backend.email.EmailService;
 import org.cdm.web.backend.email.EmailServiceImpl;
 import org.cdm.web.backend.role.Role;
@@ -23,6 +25,8 @@ import org.cdm.web.backend.email.VerificationTokenRepository;
 public class UserService implements UserDetailsService {
     @PersistenceContext
     private EntityManager em;
+    @Getter
+    @Setter
     @Autowired
     UserRepository userRepository;
     @Autowired
@@ -102,4 +106,17 @@ public class UserService implements UserDetailsService {
     public VerificationToken getVerificationToken(String VerificationToken) {
         return tokenRepository.findByToken(VerificationToken);
     }
+
+    public VerificationToken getTokenByUsername(String username) {
+        return tokenRepository.findByUsername(username);
+    }
+
+    public void deleteToken(VerificationToken token) {
+        tokenRepository.delete(token);
+    }
+
+    public List<VerificationToken> getAllTokens() {
+        return tokenRepository.findAll();
+    }
+
 }
