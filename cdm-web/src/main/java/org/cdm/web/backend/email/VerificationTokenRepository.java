@@ -8,5 +8,5 @@ public interface VerificationTokenRepository
 
     VerificationToken findByToken(String token);
 
-    //VerificationToken findByUser(User user);
+    VerificationToken findByUsername(String username);
 }

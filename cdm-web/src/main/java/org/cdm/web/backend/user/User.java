@@ -106,4 +106,16 @@ public class User implements UserDetails {
     public void setRoles(Set<Role> roles) {
         this.roles = roles;
     }
+
+
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof User)) {
+            return false;
+        }
+        if (this.password.equals(((User) obj).getPassword()) && this.username.equals(((User) obj).getUsername())) {
+            return true;
+        }
+        return super.equals(obj);
+    }
 }
