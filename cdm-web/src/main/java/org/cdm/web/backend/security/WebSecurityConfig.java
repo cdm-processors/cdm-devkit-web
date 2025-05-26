@@ -61,9 +61,6 @@ public class WebSecurityConfig {
                         .requestMatchers("/", "/resources/**").permitAll()
                         .anyRequest().authenticated()
                 )
-                .exceptionHandling(ex -> ex
-                        .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)) // 401
-                )
                 .formLogin(formLogin -> formLogin
                         .loginPage("/login")
                         .failureHandler((request, response, exception) -> {

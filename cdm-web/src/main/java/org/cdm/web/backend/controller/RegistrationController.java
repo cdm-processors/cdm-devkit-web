@@ -106,7 +106,7 @@ public class RegistrationController {
 
         user.setEnabled(true);
         userService.saveUser(user);
-        return "redirect:/login.html";
+        return "redirect:http://localhost:3000/login";
     }
 }
 
