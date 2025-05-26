@@ -17,20 +17,60 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 
+import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.ImportResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.testcontainers.containers.ComposeContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
+import io.github.cdimascio.dotenv.Dotenv;
 
-
+import java.io.File;
 import java.util.List;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+
+@Testcontainers
+@ContextConfiguration(classes = CdmWebApplication.class)
+@ImportResource({"application.properties"})
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class E2ETest {
+    private static final Dotenv dotenv = Dotenv.configure()
+        .directory("src/test/resources")
+        .load();
+
+
+    @Container
+    private static final ComposeContainer composeContainer =
+            new ComposeContainer(new File("src/test/resources/compose.yaml"))
+                    .withExposedService("postgres", 5432)
+                    .withLocalCompose(true);
+
+    @DynamicPropertySource
+    static void configureProperties(DynamicPropertyRegistry registry) {
+        String jdbcUrl = String.format(
+            "jdbc:postgresql://%s:%d/testdb",
+            composeContainer.getServiceHost("postgres", 5432),
+            composeContainer.getServicePort("postgres", 5432)
+        );
+        
+        registry.add("spring.datasource.url", () -> jdbcUrl);
+        registry.add("spring.datasource.username", () -> "testuser");
+        registry.add("spring.datasource.password", () -> "testpass");
+        registry.add("spring.datasource.driver-class-name", () -> "org.postgresql.Driver");
+        registry.add("spring.mail.username", () -> dotenv.get("MAIL_USER"));
+        registry.add("spring.mail.password", () -> dotenv.get("MAIL_PASSWORD"));
+    }
+
 
     @Autowired
     private TestRestTemplate restTemplate;
@@ -190,4 +230,5 @@ class E2ETest {
             userService.deleteToken(token);
         }
     }
+    
 }

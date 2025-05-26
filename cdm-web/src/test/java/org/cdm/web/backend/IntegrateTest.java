@@ -12,7 +12,17 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.ImportResource;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
+import org.testcontainers.containers.ComposeContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -20,8 +30,32 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@SpringBootTest
+@Testcontainers
+@ContextConfiguration(classes = CdmWebApplication.class)
+@ImportResource({"application.properties"})
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_CLASS)
 class IntegrateTest {
+
+    @Container
+    private static final ComposeContainer composeContainer =
+            new ComposeContainer(new File("src/test/resources/compose.yaml"))
+                    .withExposedService("postgres", 5432)
+                    .withLocalCompose(true);
+    
+    @DynamicPropertySource
+    static void configureProperties(DynamicPropertyRegistry registry) {
+        String jdbcUrl = String.format(
+            "jdbc:postgresql://%s:%d/testdb",
+            composeContainer.getServiceHost("postgres", 5432),
+            composeContainer.getServicePort("postgres", 5432)
+        );
+        
+        registry.add("spring.datasource.url", () -> jdbcUrl);
+        registry.add("spring.datasource.username", () -> "testuser");
+        registry.add("spring.datasource.password", () -> "testpass");
+        registry.add("spring.datasource.driver-class-name", () -> "org.postgresql.Driver");
+    }
 
     @Autowired
     private UserService userService;
