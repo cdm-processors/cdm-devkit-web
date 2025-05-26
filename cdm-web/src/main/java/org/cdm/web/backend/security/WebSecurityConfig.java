@@ -54,7 +54,7 @@ public class WebSecurityConfig {
                         .requestMatchers("/api/auth/login").permitAll()
                         .requestMatchers("/login").permitAll()
                         .requestMatchers("/api/auth/registration").permitAll()// Разрешить доступ к этому эндпоинту
-                        .requestMatchers("/registration").not().fullyAuthenticated()
+                        .requestMatchers("/registration").permitAll()
                         .requestMatchers("/registrationConfirm").permitAll()
                         .requestMatchers("/api/auth/create-container").hasRole("USER")
                         .requestMatchers("/create-container").authenticated()

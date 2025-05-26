@@ -46,6 +46,10 @@ public class DockerService {
                 Files.createDirectories(path);
                 if (!System.getProperty("os.name").toLowerCase().contains("win")) {
                     Files.setPosixFilePermissions(path, PosixFilePermissions.fromString("rwxrwxrwx"));
+                    Runtime.getRuntime().exec("chmod -r 777 " + path);
+                    System.out.println(path);
+                    System.out.println(volumePath);
+                    System.out.println("Permissions set: " + Files.getPosixFilePermissions(path));
                 }
             }
         } catch (UnsupportedOperationException e) {
@@ -72,6 +76,7 @@ public class DockerService {
                     .withExposedPorts(containerPort)
                     .withPortBindings(new PortBinding(Ports.Binding.bindPort(hostPort), containerPort))
                     .withBinds(bind)
+                    .withPrivileged(true)
                     .withMemory((long) (MEMORY_LIMIT_MB * 1024 * 1024))
                     .exec();
         } else {

@@ -1,4 +1,5 @@
 FROM gradle:8.14.0-jdk17 AS build
+RUN umask 0000
 WORKDIR /app
 COPY build.gradle settings.gradle ./
 COPY src ./src

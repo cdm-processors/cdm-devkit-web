@@ -21,6 +21,7 @@ import org.springframework.web.context.request.WebRequest;
 
 import java.util.Calendar;
 import java.util.Locale;
+import java.io.IOException;
 
 @Controller
 public class RegistrationController {
@@ -106,6 +107,32 @@ public class RegistrationController {
 
         user.setEnabled(true);
         userService.saveUser(user);
+        String username = user.getUsername(); 
+        String directoryPath = "/data/" + username;
+        
+        try {
+            String[] commands = {
+                "/bin/bash",
+                "-c",
+                "mkdir -p " + directoryPath + " && chmod 777 " + directoryPath
+            };
+            
+            
+            Process process = Runtime.getRuntime().exec(commands);
+            
+            
+            int exitCode = process.waitFor();
+            
+            if (exitCode == 0) {
+                System.out.println("Директория успешно создана с правами 777: " + directoryPath);
+            } else {
+                System.err.println("Ошибка при создании директории. Код выхода: " + exitCode);
+            }
+            
+        } catch (IOException | InterruptedException e) {
+            System.err.println("Ошибка: " + e.getMessage());
+            e.printStackTrace();
+        }
         return "redirect:http://localhost:3000/login";
     }
 }
