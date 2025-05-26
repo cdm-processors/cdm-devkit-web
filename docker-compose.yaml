@@ -55,10 +55,10 @@ services:
       - 'GOOSE_DBSTRING=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}?sslmode=disable'
       - 'GOOSE_MIGRATION_DIR=/migrations'
       - 'GOOSE_TABLE=public.goose_migrations'
-    entrypoint: > 
+    entrypoint: >
       bash -c "goose up"
     depends_on:
       - postgres
-    
+
 volumes:
   postgres_data:
