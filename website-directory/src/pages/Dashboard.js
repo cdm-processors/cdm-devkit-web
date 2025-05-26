@@ -35,9 +35,9 @@ const Dashboard = ({ user, isAuthenticated, createContainer }) => {
     setIsLoading(false);
   }, [isAuthenticated, navigate]);
 
-  const handleLogout = () => {
-    navigate("/");
-  };
+  // const handleLogout = () => {
+  //   navigate("/");
+  // };
 
   const handleCreateContainer = () => {
     const containerData = {
@@ -138,7 +138,7 @@ const Dashboard = ({ user, isAuthenticated, createContainer }) => {
               >
                 Create Container
               </StyledButton>
-              <StyledButton
+              {/* <StyledButton
                 to="#"
                 onClick={handleLogout}
                 style={{
@@ -149,7 +149,7 @@ const Dashboard = ({ user, isAuthenticated, createContainer }) => {
                 }}
               >
                 Logout
-              </StyledButton>
+              </StyledButton> */}
             </ButtonGroup>
           </StyledFormArea>
         )}

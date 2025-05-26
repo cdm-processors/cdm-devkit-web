@@ -31,6 +31,13 @@ export const loginUser = (credentials, navigate, setError) => {
         } catch (error) {
             console.error('Login error:', error.response?.data || error);
             setError(error.response?.data || 'Invalid email or password');
+            dispatch({ 
+                type: 'LOGIN_FAILURE', 
+                payload: {
+                    message: 'Oops! Something went wrong. Please try again later.'
+                }
+            });
+            navigate('../');
         }
     };
 };
