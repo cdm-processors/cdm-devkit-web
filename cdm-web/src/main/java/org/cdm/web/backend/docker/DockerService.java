@@ -61,7 +61,7 @@ public class DockerService {
 
     public ContainerResponse createContainer(String username) throws InterruptedException {
         CreateContainerResponse container;
-        dockerClient.pullImageCmd("nikolay251/cdm-web-coder1:tag").start().awaitCompletion();
+        dockerClient.pullImageCmd("nikolay251/cdm-web-coder1:beta").start().awaitCompletion();
         int hostPort = allocatePort();
         if (hostPort == -1) {
             throw new RuntimeException("No available ports for creating the container.");
@@ -70,14 +70,15 @@ public class DockerService {
         if (!System.getProperty("os.name").toLowerCase().contains("win")){
             String volumePath = "/data/" + username;
             ensureVolumePathExists(volumePath);
-            Volume volume = new Volume("/home/coder/user");
+            Volume volume = new Volume("/root/user");
             Bind bind = new Bind(volumePath, volume);
-            container = dockerClient.createContainerCmd("nikolay251/cdm-web-coder1:tag")
+            container = dockerClient.createContainerCmd("nikolay251/cdm-web-coder1:beta")
                     .withExposedPorts(containerPort)
                     .withPortBindings(new PortBinding(Ports.Binding.bindPort(hostPort), containerPort))
                     .withBinds(bind)
                     .withPrivileged(true)
                     .withMemory((long) (MEMORY_LIMIT_MB * 1024 * 1024))
+                    .withUser("root")
                     .exec();
         } else {
             container = dockerClient.createContainerCmd("nikolay251/cdm-web-coder1:tag")
