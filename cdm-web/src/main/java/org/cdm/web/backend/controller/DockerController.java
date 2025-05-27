@@ -22,7 +22,7 @@ public class DockerController {
     @GetMapping("/home")
     public ResponseEntity<String> showHomePage() {
         Authentication authentication =
-                SecurityContextHolder.getContext().getAuthentication();
+            SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
         return ResponseEntity.ok(username);
     }
@@ -37,7 +37,7 @@ public class DockerController {
             return ResponseEntity.ok(response.getUrl());
         } catch (Exception e) {
             return ResponseEntity.status(500)
-                    .body("Error creating container: " + e.getMessage());
+                .body("Error creating container: " + e.getMessage());
         }
     }
 }
